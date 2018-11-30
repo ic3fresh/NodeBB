@@ -60,8 +60,7 @@ module.exports = function (Topics) {
 	};
 
 	Topics.unreadCutoff = function () {
-		var cutoff = parseInt(meta.config.unreadCutoff, 10) || 2;
-		return Date.now() - (cutoff * 86400000);
+		return Date.now() - (meta.config.unreadCutoff * 86400000);
 	};
 
 	Topics.getUnreadTids = function (params, callback) {
@@ -213,6 +212,7 @@ module.exports = function (Topics) {
 					}
 
 					if (topic && topic.cid && cidMatch(topic.cid) && !blockedUids.includes(parseInt(topic.uid, 10))) {
+						topic.tid = parseInt(topic.tid, 10);
 						if ((results.isTopicsFollowed[index] || !results.ignoredCids.includes(String(topic.cid)))) {
 							counts[''] += 1;
 							tidsByFilter[''].push(topic.tid);
@@ -223,7 +223,7 @@ module.exports = function (Topics) {
 							tidsByFilter.watched.push(topic.tid);
 						}
 
-						if (parseInt(topic.postcount, 10) <= 1) {
+						if (topic.postcount <= 1) {
 							counts.unreplied += 1;
 							tidsByFilter.unreplied.push(topic.tid);
 						}
@@ -310,7 +310,7 @@ module.exports = function (Topics) {
 	Topics.pushUnreadCount = function (uid, callback) {
 		callback = callback || function () {};
 
-		if (!uid || parseInt(uid, 10) === 0) {
+		if (!uid || parseInt(uid, 10) <= 0) {
 			return setImmediate(callback);
 		}
 
@@ -464,9 +464,9 @@ module.exports = function (Topics) {
 			function (results, next) {
 				var cutoff = Topics.unreadCutoff();
 				var result = tids.map(function (tid, index) {
-					var read = !results.tids_unread[index] &&
-						(results.topicScores[index] < cutoff ||
-						!!(results.userScores[index] && results.userScores[index] >= results.topicScores[index]));
+					var read = !results.tids_unread[index]
+						&& (results.topicScores[index] < cutoff
+						|| !!(results.userScores[index] && results.userScores[index] >= results.topicScores[index]));
 					return { tid: tid, read: read, index: index };
 				});
 
@@ -516,14 +516,15 @@ module.exports = function (Topics) {
 	};
 
 	Topics.filterNewTids = function (tids, uid, callback) {
+		if (parseInt(uid, 10) <= 0) {
+			return setImmediate(callback, null, []);
+		}
 		async.waterfall([
 			function (next) {
 				db.sortedSetScores('uid:' + uid + ':tids_read', tids, next);
 			},
 			function (scores, next) {
-				tids = tids.filter(function (tid, index) {
-					return tid && !scores[index];
-				});
+				tids = tids.filter((tid, index) => tid && !scores[index]);
 				next(null, tids);
 			},
 		], callback);
@@ -535,9 +536,7 @@ module.exports = function (Topics) {
 				db.sortedSetScores('topics:posts', tids, next);
 			},
 			function (scores, next) {
-				tids = tids.filter(function (tid, index) {
-					return tid && scores[index] <= 1;
-				});
+				tids = tids.filter((tid, index) => tid && scores[index] <= 1);
 				next(null, tids);
 			},
 		], callback);

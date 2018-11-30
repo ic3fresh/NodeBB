@@ -3,7 +3,6 @@
 
 var async = require('async');
 var _ = require('lodash');
-var winston = require('winston');
 
 var db = require('../database');
 var meta = require('../meta');
@@ -16,11 +15,6 @@ module.exports = function (Topics) {
 	var stripTeaserTags = utils.stripTags.concat(['img']);
 
 	Topics.getTeasers = function (topics, uid, callback) {
-		if (typeof uid === 'function') {
-			winston.warn('[Topics.getTeasers] this usage is deprecated please provide uid');
-			callback = uid;
-			uid = 0;
-		}
 		if (!Array.isArray(topics) || !topics.length) {
 			return callback(null, []);
 		}
@@ -31,25 +25,17 @@ module.exports = function (Topics) {
 		var tidToPost = {};
 
 		topics.forEach(function (topic) {
-			counts.push(topic && (parseInt(topic.postcount, 10) || 0));
+			counts.push(topic && topic.postcount);
 			if (topic) {
 				if (topic.teaserPid === 'null') {
 					delete topic.teaserPid;
 				}
-
-				switch (meta.config.teaserPost) {
-				case 'first':
+				if (meta.config.teaserPost === 'first') {
 					teaserPids.push(topic.mainPid);
-					break;
-
-				case 'last-post':
+				} else if (meta.config.teaserPost === 'last-post') {
 					teaserPids.push(topic.teaserPid || topic.mainPid);
-					break;
-
-				case 'last-reply':	// intentional fall-through
-				default:
+				} else if (meta.config.teaserPost === 'last-reply') {
 					teaserPids.push(topic.teaserPid);
-					break;
 				}
 			}
 		});
@@ -59,16 +45,12 @@ module.exports = function (Topics) {
 				posts.getPostsFields(teaserPids, ['pid', 'uid', 'timestamp', 'tid', 'content'], next);
 			},
 			function (_postData, next) {
-				_postData = _postData.filter(function (post) {
-					return post && parseInt(post.pid, 10);
-				});
+				_postData = _postData.filter(post => post && post.pid);
 				handleBlocks(uid, _postData, next);
 			},
 			function (_postData, next) {
 				postData = _postData.filter(Boolean);
-				var uids = _.uniq(postData.map(function (post) {
-					return post.uid;
-				}));
+				const uids = _.uniq(postData.map(post => post.uid));
 
 				user.getUsersFields(uids, ['uid', 'username', 'userslug', 'picture'], next);
 			},
@@ -133,17 +115,23 @@ module.exports = function (Topics) {
 		const postsPerIteration = 5;
 		let start = 0;
 		let stop = start + postsPerIteration - 1;
-
+		let checkedAllReplies = false;
 		async.doWhilst(function (next) {
 			async.waterfall([
 				function (next) {
 					db.getSortedSetRevRange('tid:' + postData.tid + ':posts', start, stop, next);
 				},
 				function (pids, next) {
-					if (!pids.length) {
-						return callback(null, null);
+					if (pids.length) {
+						return next(null, pids);
 					}
 
+					checkedAllReplies = true;
+					Topics.getTopicField(postData.tid, 'mainPid', function (err, mainPid) {
+						next(err, [mainPid]);
+					});
+				},
+				function (pids, next) {
 					posts.getPostsFields(pids, ['pid', 'uid', 'timestamp', 'tid', 'content'], next);
 				},
 				function (prevPosts, next) {
@@ -158,18 +146,13 @@ module.exports = function (Topics) {
 				},
 			], next);
 		}, function () {
-			return isBlocked && prevPost && prevPost.pid;
+			return isBlocked && prevPost && prevPost.pid && !checkedAllReplies;
 		}, function (err) {
 			callback(err, prevPost);
 		});
 	}
 
 	Topics.getTeasersByTids = function (tids, uid, callback) {
-		if (typeof uid === 'function') {
-			winston.warn('[Topics.getTeasersByTids] this usage is deprecated please provide uid');
-			callback = uid;
-			uid = 0;
-		}
 		if (!Array.isArray(tids) || !tids.length) {
 			return callback(null, []);
 		}
@@ -184,11 +167,6 @@ module.exports = function (Topics) {
 	};
 
 	Topics.getTeaser = function (tid, uid, callback) {
-		if (typeof uid === 'function') {
-			winston.warn('[Topics.getTeaser] this usage is deprecated please provide uid');
-			callback = uid;
-			uid = 0;
-		}
 		Topics.getTeasersByTids([tid], uid, function (err, teasers) {
 			callback(err, Array.isArray(teasers) && teasers.length ? teasers[0] : null);
 		});
