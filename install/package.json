@@ -98,7 +98,7 @@
         "nodebb-plugin-mentions": "2.3.0",
         "nodebb-plugin-ns-awards": "PaciakPL/nodebb-plugin-ns-awards",
         "nodebb-plugin-ns-custom-fields": "PaciakPL/nodebb-plugin-ns-custom-fields",
-        "nodebb-plugin-ns-embed": "^2.1.1",
+        "nodebb-plugin-ns-embed": "^3.0.1",
         "nodebb-plugin-ns-spoiler": "^4.1.0",
         "nodebb-plugin-poll": "^0.2.17",
         "nodebb-plugin-reactions": "0.0.3",
