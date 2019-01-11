@@ -112,7 +112,7 @@
         "nodebb-rewards-essentials": "0.0.13",
         "nodebb-theme-persona": "PaciakPL/nodebb-theme-persona",
         "nodebb-widget-essentials": "4.0.11",
-        "nodebb-widget-ns-birthdays": "^2.0.0",
+        "nodebb-widget-ns-birthdays": "^3.0.0",
         "nodebb-widget-search-bar": "^1.1.2",
         "nodemailer": "^4.6.5",
         "passport": "^0.4.0",
