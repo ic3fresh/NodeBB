@@ -14,7 +14,6 @@
 	"disable-email-changes": "Zakázať zmenu e-mailu",
 	"disable-password-changes": "Zakázať zmenu hesla",
 	"allow-account-deletion": "Povoliť zmazanie účtu",
-	"user-info-private": "Skryť zoznam používateľov a údaje pred hosťami",
 	"hide-fullname": "Skryť meno pred používateľom",
 	"hide-email": "Skryť e-mail pre používateľmi",
 	"themes": "Vzhľady",
@@ -70,5 +69,9 @@
 	"email-post-notif": "Poslať e-mail, ak sa objaví odpoveď v téme, ktorú sledujem",
 	"follow-created-topics": "Sledovať mnou vytvorené témy",
 	"follow-replied-topics": "Sledovať témy, na ktoré ste odpovedal",
-	"default-notification-settings": "Predvolené nastavenia oznámení"
+	"default-notification-settings": "Predvolené nastavenia oznámení",
+	"categoryWatchState": "Default category watch state",
+	"categoryWatchState.watching": "Watching",
+	"categoryWatchState.notwatching": "Not Watching",
+	"categoryWatchState.ignoring": "Ignoring"
 }

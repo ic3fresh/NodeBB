@@ -5,6 +5,7 @@ var async = require('async');
 var path = require('path');
 var nconf = require('nconf');
 var request = require('request');
+var jwt = require('jsonwebtoken');
 
 var db = require('./mocks/databasemock');
 var User = require('../src/user');
@@ -56,6 +57,17 @@ describe('User', function () {
 
 				testUid = userId;
 				done();
+			});
+		});
+
+		it('should be created properly', function (done) {
+			User.create({ username: 'weirdemail', email: '<h1>test</h1>@gmail.com' }, function (err, uid) {
+				assert.ifError(err);
+				User.getUserData(uid, function (err, data) {
+					assert.ifError(err);
+					assert.equal(data.email, '&lt;h1&gt;test&lt;&#x2F;h1&gt;@gmail.com');
+					done();
+				});
 			});
 		});
 
@@ -1257,6 +1269,9 @@ describe('User', function () {
 				function (next) {
 					User.setSetting(uid, 'dailyDigestFreq', 'day', next);
 				},
+				function (next) {
+					User.setSetting(uid, 'notificationType_test', 'notificationemail', next);
+				},
 			], done);
 		});
 
@@ -1271,6 +1286,110 @@ describe('User', function () {
 			User.digest.execute({ interval: 'month' }, function (err) {
 				assert.ifError(err);
 				done();
+			});
+		});
+
+		describe('unsubscribe via POST', function () {
+			it('should unsubscribe from digest if one-click unsubscribe is POSTed', function (done) {
+				const token = jwt.sign({
+					template: 'digest',
+					uid: uid,
+				}, nconf.get('secret'));
+
+				request({
+					method: 'post',
+					url: nconf.get('url') + '/email/unsubscribe/' + token,
+				}, function (err, res) {
+					assert.ifError(err);
+					assert.strictEqual(res.statusCode, 200);
+
+					db.getObjectField('user:' + uid + ':settings', 'dailyDigestFreq', function (err, value) {
+						assert.ifError(err);
+						assert.strictEqual(value, 'off');
+						done();
+					});
+				});
+			});
+
+			it('should unsubscribe from notifications if one-click unsubscribe is POSTed', function (done) {
+				const token = jwt.sign({
+					template: 'notification',
+					type: 'test',
+					uid: uid,
+				}, nconf.get('secret'));
+
+				request({
+					method: 'post',
+					url: nconf.get('url') + '/email/unsubscribe/' + token,
+				}, function (err, res) {
+					assert.ifError(err);
+					assert.strictEqual(res.statusCode, 200);
+
+					db.getObjectField('user:' + uid + ':settings', 'notificationType_test', function (err, value) {
+						assert.ifError(err);
+						assert.strictEqual(value, 'notification');
+						done();
+					});
+				});
+			});
+
+			it('should return errors on missing template in token', function (done) {
+				const token = jwt.sign({
+					uid: uid,
+				}, nconf.get('secret'));
+
+				request({
+					method: 'post',
+					url: nconf.get('url') + '/email/unsubscribe/' + token,
+				}, function (err, res) {
+					assert.ifError(err);
+					assert.strictEqual(res.statusCode, 404);
+					done();
+				});
+			});
+
+			it('should return errors on wrong template in token', function (done) {
+				const token = jwt.sign({
+					template: 'user',
+					uid: uid,
+				}, nconf.get('secret'));
+
+				request({
+					method: 'post',
+					url: nconf.get('url') + '/email/unsubscribe/' + token,
+				}, function (err, res) {
+					assert.ifError(err);
+					assert.strictEqual(res.statusCode, 404);
+					done();
+				});
+			});
+
+			it('should return errors on missing token', function (done) {
+				request({
+					method: 'post',
+					url: nconf.get('url') + '/email/unsubscribe/',
+				}, function (err, res) {
+					assert.ifError(err);
+					assert.strictEqual(res.statusCode, 404);
+					done();
+				});
+			});
+
+			it('should return errors on token signed with wrong secret (verify-failure)', function (done) {
+				const token = jwt.sign({
+					template: 'notification',
+					type: 'test',
+					uid: uid,
+				}, nconf.get('secret') + 'aababacaba');
+
+				request({
+					method: 'post',
+					url: nconf.get('url') + '/email/unsubscribe/' + token,
+				}, function (err, res) {
+					assert.ifError(err);
+					assert.strictEqual(res.statusCode, 403);
+					done();
+				});
 			});
 		});
 	});
@@ -1530,7 +1649,7 @@ describe('User', function () {
 		});
 
 		it('should reject user registration', function (done) {
-			socketAdmin.user.rejectRegistration({ uid: adminUid }, { username: 'rejectme' }, function (err) {
+			socketUser.rejectRegistration({ uid: adminUid }, { username: 'rejectme' }, function (err) {
 				assert.ifError(err);
 				User.getRegistrationQueue(0, -1, function (err, users) {
 					assert.ifError(err);
@@ -1549,7 +1668,7 @@ describe('User', function () {
 				gdpr_consent: true,
 			}, function (err) {
 				assert.ifError(err);
-				socketAdmin.user.acceptRegistration({ uid: adminUid }, { username: 'acceptme' }, function (err, uid) {
+				socketUser.acceptRegistration({ uid: adminUid }, { username: 'acceptme' }, function (err, uid) {
 					assert.ifError(err);
 					User.exists(uid, function (err, exists) {
 						assert.ifError(err);
@@ -1568,15 +1687,17 @@ describe('User', function () {
 	describe('invites', function () {
 		var socketUser = require('../src/socket.io/user');
 		var inviterUid;
+		var adminUid;
 
 		before(function (done) {
-			User.create({
-				username: 'inviter',
-				email: 'inviter@nodebb.org',
-			}, function (err, uid) {
+			async.parallel({
+				inviter: async.apply(User.create, { username: 'inviter', email: 'inviter@nodebb.org' }),
+				admin: async.apply(User.create, { username: 'adminInvite' }),
+			}, function (err, results) {
 				assert.ifError(err);
-				inviterUid = uid;
-				done();
+				inviterUid = results.inviter;
+				adminUid = results.admin;
+				groups.join('administrators', adminUid, done);
 			});
 		});
 
@@ -1685,8 +1806,8 @@ describe('User', function () {
 		});
 
 		it('should delete invitation', function (done) {
-			var socketAdmin = require('../src/socket.io/admin');
-			socketAdmin.user.deleteInvitation({ uid: inviterUid }, { invitedBy: 'inviter', email: 'invite1@test.com' }, function (err) {
+			var socketUser = require('../src/socket.io/user');
+			socketUser.deleteInvitation({ uid: adminUid }, { invitedBy: 'inviter', email: 'invite1@test.com' }, function (err) {
 				assert.ifError(err);
 				db.isSetMember('invitation:uid:' + inviterUid, 'invite1@test.com', function (err, isMember) {
 					assert.ifError(err);

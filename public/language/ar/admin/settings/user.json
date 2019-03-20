@@ -14,7 +14,6 @@
 	"disable-email-changes": "عدم السماح بتغيير البريد الالكتروني",
 	"disable-password-changes": "عدم السماح بتغيير كلمة المرور",
 	"allow-account-deletion": "السماح بحذف الحساب",
-	"user-info-private": "إخفاء قائمة المستخدم والبيانات عن الزوار",
 	"hide-fullname": "إخفاء الإسم الكامل عن المستخدمين",
 	"hide-email": "إخفاء البريد الإلكتروني عن المستخدمين",
 	"themes": "القوالب",
@@ -70,5 +69,9 @@
 	"email-post-notif": "Send an email when replies are made to topics I am subscribed to",
 	"follow-created-topics": "Follow topics you create",
 	"follow-replied-topics": "Follow topics that you reply to",
-	"default-notification-settings": "Default notification settings"
+	"default-notification-settings": "Default notification settings",
+	"categoryWatchState": "Default category watch state",
+	"categoryWatchState.watching": "Watching",
+	"categoryWatchState.notwatching": "Not Watching",
+	"categoryWatchState.ignoring": "Ignoring"
 }

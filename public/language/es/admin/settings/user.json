@@ -14,7 +14,6 @@
 	"disable-email-changes": "Desactivar cambios de email",
 	"disable-password-changes": "Desactivar cambios de contraseña",
 	"allow-account-deletion": "Permitir borrar cuenta",
-	"user-info-private": "Esconder lista de usuarios y datos de invitados",
 	"hide-fullname": "Esconder nombre completo de los usuarios",
 	"hide-email": "Esconder email de los usuarios",
 	"themes": "Plantillas",
@@ -70,5 +69,9 @@
 	"email-post-notif": "Enviar un correo electrónico cuando se hacen respuestas a temas a los que estoy suscrito/a",
 	"follow-created-topics": "Seguir los temas que tu crees",
 	"follow-replied-topics": "Seguir los temas a los que contestas",
-	"default-notification-settings": "Configuración de notificación por defecto"
+	"default-notification-settings": "Configuración de notificación por defecto",
+	"categoryWatchState": "Default category watch state",
+	"categoryWatchState.watching": "Watching",
+	"categoryWatchState.notwatching": "Not Watching",
+	"categoryWatchState.ignoring": "Ignoring"
 }

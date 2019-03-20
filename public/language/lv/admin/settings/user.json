@@ -14,7 +14,6 @@
 	"disable-email-changes": "Atspējot e-pasta adreses izmaiņas",
 	"disable-password-changes": "Atspējot paroles izmaiņas",
 	"allow-account-deletion": "Atļaut konta izdzēšanu",
-	"user-info-private": "Slēpt lietotāju sarakstu un datus no viesiem",
 	"hide-fullname": "Slēpt vārdu un uzvārdu no lietotājiem",
 	"hide-email": "Slēpt e-pasta adresi no lietotājiem",
 	"themes": "Tēmas",
@@ -70,5 +69,9 @@
 	"email-post-notif": "Sūtīt e-pastu, kad kāds raksta tematā, kuru esmu abonējis",
 	"follow-created-topics": "Sekot tematiem, kurus esi izveidojis(-jusi)",
 	"follow-replied-topics": "Sekot tematiem, kuros esi rakstījis(-jusi)",
-	"default-notification-settings": "Noklusējuma ziņojumu iestatījumi"
+	"default-notification-settings": "Noklusējuma ziņojumu iestatījumi",
+	"categoryWatchState": "Default category watch state",
+	"categoryWatchState.watching": "Watching",
+	"categoryWatchState.notwatching": "Not Watching",
+	"categoryWatchState.ignoring": "Ignoring"
 }

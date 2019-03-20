@@ -693,7 +693,12 @@ describe('Topic\'s', function () {
 					topics.ignore(newTid, uid, done);
 				},
 				function (done) {
-					topics.getLatestTopics(uid, 0, -1, 'year', done);
+					topics.getLatestTopics({
+						uid: uid,
+						start: 0,
+						stop: -1,
+						term: 'year',
+					}, done);
 				},
 				function (results, done) {
 					var topics = results.topics;
@@ -1372,6 +1377,38 @@ describe('Topic\'s', function () {
 				function (unreadTids, next) {
 					unreadTids = unreadTids.map(String);
 					assert(!unreadTids.includes(String(privateTid)));
+					next();
+				},
+			], done);
+		});
+
+		it('should not return topics in category you ignored/not watching', function (done) {
+			var ignoredCid;
+			var tid;
+			async.waterfall([
+				function (next) {
+					categories.create({
+						name: 'ignored category',
+						description: 'ignored category',
+					}, next);
+				},
+				function (category, next) {
+					ignoredCid = category.cid;
+					privileges.categories.rescind(['read'], category.cid, 'registered-users', next);
+				},
+				function (next) {
+					topics.post({ uid: adminUid, title: 'topic in private category', content: 'registered-users cant see this', cid: ignoredCid }, next);
+				},
+				function (data, next) {
+					tid = data.topicData.tid;
+					User.ignoreCategory(uid, ignoredCid, next);
+				},
+				function (next) {
+					topics.getUnreadTids({ uid: uid }, next);
+				},
+				function (unreadTids, next) {
+					unreadTids = unreadTids.map(String);
+					assert(!unreadTids.includes(String(tid)));
 					next();
 				},
 			], done);
