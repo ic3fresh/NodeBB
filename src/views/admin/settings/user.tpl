@@ -67,12 +67,6 @@
 			</div>
 			<div class="checkbox">
 				<label class="mdl-switch mdl-js-switch mdl-js-ripple-effect">
-					<input class="mdl-switch__input" type="checkbox" data-field="privateUserInfo">
-					<span class="mdl-switch__label"><strong>[[admin/settings/user:user-info-private]]</strong></span>
-				</label>
-			</div>
-			<div class="checkbox">
-				<label class="mdl-switch mdl-js-switch mdl-js-ripple-effect">
 					<input class="mdl-switch__input" type="checkbox" data-field="hideFullname">
 					<span class="mdl-switch__label"><strong>[[admin/settings/user:hide-fullname]]</strong></span>
 				</label>
@@ -305,6 +299,15 @@
 					<input class="mdl-switch__input" type="checkbox" data-field="followTopicsOnReply">
 					<span class="mdl-switch__label"><strong>[[admin/settings/user:follow-replied-topics]]</strong></span>
 				</label>
+			</div>
+
+			<div class="form-group">
+				<label>[[admin/settings/user:categoryWatchState]]</label>
+				<select class="form-control" data-field="categoryWatchState">
+					<option value="watching">[[admin/settings/user:categoryWatchState.watching]]</option>
+					<option value="notwatching">[[admin/settings/user:categoryWatchState.notwatching]]</option>
+					<option value="ignoring">[[admin/settings/user:categoryWatchState.ignoring]]</option>
+				</select>
 			</div>
 
 			<label>[[admin/settings/user:default-notification-settings]]</label>

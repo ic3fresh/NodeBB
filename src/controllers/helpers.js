@@ -136,10 +136,10 @@ helpers.notAllowed = function (req, res, error) {
 				});
 			}
 		} else if (res.locals.isAPI) {
-			req.session.returnTo = nconf.get('relative_path') + req.url.replace(/^\/api/, '');
+			req.session.returnTo = req.url.replace(/^\/api/, '');
 			res.status(401).json('not-authorized');
 		} else {
-			req.session.returnTo = nconf.get('relative_path') + req.url;
+			req.session.returnTo = req.url;
 			res.redirect(nconf.get('relative_path') + '/login');
 		}
 	});
@@ -232,6 +232,20 @@ helpers.getCategories = function (set, uid, privilege, selectedCid, callback) {
 	async.waterfall([
 		function (next) {
 			categories.getCidsByPrivilege(set, uid, privilege, next);
+		},
+		function (cids, next) {
+			getCategoryData(cids, uid, selectedCid, next);
+		},
+	], callback);
+};
+
+helpers.getCategoriesByStates = function (uid, selectedCid, states, callback) {
+	async.waterfall([
+		function (next) {
+			user.getCategoriesByStates(uid, states, next);
+		},
+		function (cids, next) {
+			privileges.categories.filterCids('read', cids, uid, next);
 		},
 		function (cids, next) {
 			getCategoryData(cids, uid, selectedCid, next);

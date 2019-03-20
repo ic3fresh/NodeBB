@@ -14,7 +14,6 @@
 	"disable-email-changes": "Onemogući promenu email-a",
 	"disable-password-changes": "Onemogući promenu šifre",
 	"allow-account-deletion": "Dozvoli brisanje naloga",
-	"user-info-private": "Hide user list and data from guests",
 	"hide-fullname": "Hide fullname from users",
 	"hide-email": "Hide email from users",
 	"themes": "Teme",
@@ -70,5 +69,9 @@
 	"email-post-notif": "Pošalji email kada odgovori su načinjeni u temu u kojoj sam ja pretplaćen",
 	"follow-created-topics": "Prati teme koje si ti napravio",
 	"follow-replied-topics": "Prati teme na koje si ti odgovorio",
-	"default-notification-settings": "Default notification settings"
+	"default-notification-settings": "Default notification settings",
+	"categoryWatchState": "Default category watch state",
+	"categoryWatchState.watching": "Watching",
+	"categoryWatchState.notwatching": "Not Watching",
+	"categoryWatchState.ignoring": "Ignoring"
 }

@@ -14,7 +14,6 @@
 	"disable-email-changes": "Отключить изменение email пользователя",
 	"disable-password-changes": "Отключить изменение пароля",
 	"allow-account-deletion": "Разрешить удаление аккаунта",
-	"user-info-private": "Спрятать список пользователей и их данные от гостей",
 	"hide-fullname": "Спрятать полные имена от пользователей",
 	"hide-email": "Спрятать email от пользователей",
 	"themes": "Темы",
@@ -70,5 +69,9 @@
 	"email-post-notif": "Отправлять уведомления по электронной почте при появлении новых ответов в подписанных темах",
 	"follow-created-topics": "Следить за темами которые вы создаёте",
 	"follow-replied-topics": "Следить за темами в которых вы отвечаете",
-	"default-notification-settings": "Настройки уведомлений по умолчанию"
+	"default-notification-settings": "Настройки уведомлений по умолчанию",
+	"categoryWatchState": "Default category watch state",
+	"categoryWatchState.watching": "Watching",
+	"categoryWatchState.notwatching": "Not Watching",
+	"categoryWatchState.ignoring": "Ignoring"
 }

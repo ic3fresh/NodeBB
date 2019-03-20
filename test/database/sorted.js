@@ -57,6 +57,31 @@ describe('Sorted Set methods', function () {
 				});
 			});
 		});
+
+		it('should error if score is null', function (done) {
+			db.sortedSetAdd('errorScore', null, 'value1', function (err) {
+				assert.equal(err.message, '[[error:invalid-score, null]]');
+				done();
+			});
+		});
+
+		it('should error if any score is undefined', function (done) {
+			db.sortedSetAdd('errorScore', [1, undefined], ['value1', 'value2'], function (err) {
+				assert.equal(err.message, '[[error:invalid-score, undefined]]');
+				done();
+			});
+		});
+
+		it('should add null value as `null` string', function (done) {
+			db.sortedSetAdd('nullValueZSet', 1, null, function (err) {
+				assert.ifError(err);
+				db.getSortedSetRange('nullValueZSet', 0, -1, function (err, values) {
+					assert.ifError(err);
+					assert.strictEqual(values[0], 'null');
+					done();
+				});
+			});
+		});
 	});
 
 	describe('sortedSetsAdd()', function () {
@@ -64,6 +89,14 @@ describe('Sorted Set methods', function () {
 			db.sortedSetsAdd(['sorted1', 'sorted2'], 3, 'value3', function (err) {
 				assert.equal(err, null);
 				assert.equal(arguments.length, 1);
+				done();
+			});
+		});
+
+
+		it('should error if score is null', function (done) {
+			db.sortedSetsAdd(['sorted1', 'sorted2'], null, 'value1', function (err) {
+				assert.equal(err.message, '[[error:invalid-score, null]]');
 				done();
 			});
 		});
@@ -224,6 +257,22 @@ describe('Sorted Set methods', function () {
 				assert.ifError(err);
 				assert(Array.isArray(values));
 				assert.equal(values.length, 0);
+				done();
+			});
+		});
+
+		it('should return empty array if count is 0', function (done) {
+			db.getSortedSetRevRangeByScore('sortedSetTest1', 0, 0, '+inf', '-inf', function (err, values) {
+				assert.ifError(err);
+				assert.deepEqual(values, []);
+				done();
+			});
+		});
+
+		it('should return elements from 1 to end', function (done) {
+			db.getSortedSetRevRangeByScore('sortedSetTest1', 1, -1, '+inf', '-inf', function (err, values) {
+				assert.ifError(err);
+				assert.deepEqual(values, ['value2', 'value1']);
 				done();
 			});
 		});
@@ -523,6 +572,15 @@ describe('Sorted Set methods', function () {
 				done();
 			});
 		});
+
+		it('should return empty array if keys is empty array', function (done) {
+			db.sortedSetsScore([], 'value1', function (err, scores) {
+				assert.equal(err, null);
+				assert.equal(arguments.length, 2);
+				assert.deepEqual(scores, []);
+				done();
+			});
+		});
 	});
 
 	describe('sortedSetScores()', function () {
@@ -552,6 +610,15 @@ describe('Sorted Set methods', function () {
 				assert.ifError(err);
 				assert.equal(arguments.length, 2);
 				assert.deepStrictEqual(scores, [1.2, null, null]);
+				done();
+			});
+		});
+
+		it('should return empty array if values is an empty array', function (done) {
+			db.sortedSetScores('sortedSetTest1', [], function (err, scores) {
+				assert.ifError(err);
+				assert.equal(arguments.length, 2);
+				assert.deepStrictEqual(scores, []);
 				done();
 			});
 		});

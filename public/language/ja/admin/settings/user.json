@@ -14,7 +14,6 @@
 	"disable-email-changes": "Eメールの変更を無効にする",
 	"disable-password-changes": "パスワードの変更を無効にする",
 	"allow-account-deletion": "アカウントが解除されました",
-	"user-info-private": "ゲストから、ユーザーリストとデータが見えないようにする。",
 	"hide-fullname": "ユーザーから、フルネームが見えないようにする。",
 	"hide-email": "ユーザーから、Emailが見えないようにする。",
 	"themes": "テーマ",
@@ -70,5 +69,9 @@
 	"email-post-notif": "購読中のスレッドに返信があった場合、メールで通知する。",
 	"follow-created-topics": "投稿したスレッドをフォローします",
 	"follow-replied-topics": "返信したスレッドをフォローします",
-	"default-notification-settings": "Default notification settings"
+	"default-notification-settings": "Default notification settings",
+	"categoryWatchState": "Default category watch state",
+	"categoryWatchState.watching": "Watching",
+	"categoryWatchState.notwatching": "Not Watching",
+	"categoryWatchState.ignoring": "Ignoring"
 }

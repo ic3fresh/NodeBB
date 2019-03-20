@@ -14,7 +14,6 @@
 	"disable-email-changes": "Désactiver le changement d'adresse e-mail",
 	"disable-password-changes": "Désactiver le changement de mot de passe",
 	"allow-account-deletion": "Autoriser la suppression des comptes",
-	"user-info-private": "Masquer la liste et les données utilisateurs aux invités",
 	"hide-fullname": "Masquer le nom complet aux utilisateurs",
 	"hide-email": "Masquer les emails aux utilisateurs",
 	"themes": "Thèmes",
@@ -70,5 +69,9 @@
 	"email-post-notif": "Envoyer un email lors de réponses envoyées aux sujets auxquels je suis abonné",
 	"follow-created-topics": "S'abonner aux sujets que vous créez",
 	"follow-replied-topics": "S'abonner aux sujets auxquels vous répondez",
-	"default-notification-settings": "Paramètres des notifications par défaut"
+	"default-notification-settings": "Paramètres des notifications par défaut",
+	"categoryWatchState": "Abonnement par défaut",
+	"categoryWatchState.watching": "Abonné",
+	"categoryWatchState.notwatching": "Non abonné",
+	"categoryWatchState.ignoring": "Ignoré"
 }

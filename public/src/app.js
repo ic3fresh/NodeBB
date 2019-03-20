@@ -124,6 +124,10 @@ app.cacheBuster = null;
 			config = data.config;
 			Benchpress.setGlobal('config', config);
 
+			var htmlEl = $('html');
+			htmlEl.attr('data-dir', data.header.languageDirection);
+			htmlEl.css('direction', data.header.languageDirection);
+
 			// Manually reconnect socket.io
 			socket.close();
 			socket.open();
@@ -145,8 +149,15 @@ app.cacheBuster = null;
 				Unread.initUnreadTopics();
 				Notifications.prepareDOM();
 				Chat.prepareDOM();
-				app.reskin(data.config.bootswatchSkin);
+				app.reskin(data.header.bootswatchSkin);
 				translator.switchTimeagoLanguage(callback);
+				bootbox.setLocale(config.userLang);
+
+				if (config.searchEnabled) {
+					app.handleSearch();
+				}
+
+				$(window).trigger('action:app.updateHeader');
 			});
 		});
 	};
@@ -183,6 +194,11 @@ app.cacheBuster = null;
 
 					$(window).trigger('action:app.loggedOut', data);
 					if (data.next) {
+						if (data.next.startsWith('http')) {
+							window.location.href = data.next;
+							return;
+						}
+
 						ajaxify.go(data.next);
 					} else {
 						ajaxify.refresh();
@@ -236,6 +252,8 @@ app.cacheBuster = null;
 		app.flags = app.flags || {};
 		app.flags._sessionRefresh = true;
 
+		socket.disconnect();
+
 		require(['translator'], function (translator) {
 			translator.translate('[[error:invalid-session-text]]', function (translated) {
 				bootbox.alert({
@@ -283,12 +301,12 @@ app.cacheBuster = null;
 	};
 
 	function highlightNavigationLink() {
-		var path = window.location.pathname + window.location.search;
-		$('#main-nav li').removeClass('active');
-		if (path) {
-			$('#main-nav li').removeClass('active').find('a[href="' + path + '"]').parent()
-				.addClass('active');
-		}
+		$('#main-nav li')
+			.removeClass('active')
+			.find('a')
+			.filter(function (i, x) { return window.location.pathname.startsWith(x.getAttribute('href')); })
+			.parent()
+			.addClass('active');
 	}
 
 	app.createUserTooltips = function (els, placement) {
@@ -546,21 +564,79 @@ app.cacheBuster = null;
 		});
 	}
 
+	app.enableTopicSearch = function (options) {
+		var quickSearchResults = options.resultEl;
+		var inputEl = options.inputEl;
+		var template = options.template || 'partials/quick-search-results';
+		var searchTimeoutId = 0;
+		inputEl.on('keyup', function () {
+			if (searchTimeoutId) {
+				clearTimeout(searchTimeoutId);
+				searchTimeoutId = 0;
+			}
+			if (inputEl.val().length < 3) {
+				return;
+			}
+
+			searchTimeoutId = setTimeout(function () {
+				if (!inputEl.is(':focus')) {
+					return quickSearchResults.addClass('hidden');
+				}
+				require(['search'], function (search) {
+					var data = {
+						term: inputEl.val(),
+						in: 'titles',
+						searchOnly: 1,
+					};
+					search.api(data, function (data) {
+						if (!data.matchCount) {
+							quickSearchResults.html('').addClass('hidden');
+							return;
+						}
+						data.posts.forEach(function (p) {
+							p.snippet = $(p.content).text().slice(0, 80) + '...';
+						});
+						app.parseAndTranslate(template, data, function (html) {
+							html.find('.timeago').timeago();
+							quickSearchResults.html(html).removeClass('hidden').show();
+						});
+					});
+				});
+			}, 250);
+		});
+	};
+
 	app.handleSearch = function () {
 		var searchButton = $('#search-button');
 		var searchFields = $('#search-fields');
 		var searchInput = $('#search-fields input');
+		var quickSearchResults = $('#quick-search-results');
 
 		$('#search-form .advanced-search-link').on('mousedown', function () {
 			ajaxify.go('/search');
 		});
 
-		$('#search-form').on('submit', dismissSearch);
+		$('#search-form').on('submit', function () {
+			searchInput.blur();
+		});
 		searchInput.on('blur', dismissSearch);
+		searchInput.on('focus', function () {
+			if (searchInput.val() && quickSearchResults.children().length) {
+				quickSearchResults.removeClass('hidden').show();
+			}
+		});
+
+		app.enableTopicSearch({
+			inputEl: searchInput,
+			resultEl: quickSearchResults,
+		});
 
 		function dismissSearch() {
 			searchFields.addClass('hidden');
 			searchButton.removeClass('hidden');
+			setTimeout(function () {
+				quickSearchResults.addClass('hidden');
+			}, 100);
 		}
 
 		searchButton.on('click', function (e) {
@@ -756,15 +832,33 @@ app.cacheBuster = null;
 		if (!clientEl) {
 			return;
 		}
-		// Update client.css link element to point to selected skin variant
-		clientEl.href = config.relative_path + '/assets/client' + (skinName ? '-' + skinName : '') + '.css';
 
 		var currentSkinClassName = $('body').attr('class').split(/\s+/).filter(function (className) {
 			return className.startsWith('skin-');
 		});
-		$('body').removeClass(currentSkinClassName.join(' '));
-		if (skinName) {
-			$('body').addClass('skin-' + skinName);
+		if (!currentSkinClassName[0]) {
+			return;
 		}
+		var currentSkin = currentSkinClassName[0].slice(5);
+		currentSkin = currentSkin !== 'noskin' ? currentSkin : '';
+
+		// Stop execution if skin didn't change
+		if (skinName === currentSkin) {
+			return;
+		}
+
+		var linkEl = document.createElement('link');
+		linkEl.rel = 'stylesheet';
+		linkEl.type = 'text/css';
+		linkEl.href = config.relative_path + '/assets/client' + (skinName ? '-' + skinName : '') + '.css';
+		linkEl.onload = function () {
+			clientEl.parentNode.removeChild(clientEl);
+
+			// Update body class with proper skin name
+			$('body').removeClass(currentSkinClassName.join(' '));
+			$('body').addClass('skin-' + (skinName || 'noskin'));
+		};
+
+		document.head.appendChild(linkEl);
 	};
 }());

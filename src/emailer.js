@@ -11,6 +11,7 @@ var url = require('url');
 var path = require('path');
 var fs = require('fs');
 var _ = require('lodash');
+var jwt = require('jsonwebtoken');
 
 var User = require('./user');
 var Plugins = require('./plugins');
@@ -110,7 +111,7 @@ Emailer.setupFallbackTransport = function (config) {
 				smtpOptions.ignoreTLS = false;
 			}
 		} else {
-			smtpOptions.service = config['email:smtpTransport:service'];
+			smtpOptions.service = String(config['email:smtpTransport:service']);
 		}
 
 		Emailer.transports.smtp = nodemailer.createTransport(smtpOptions);
@@ -141,7 +142,7 @@ Emailer.registerApp = function (expressApp) {
 	app = expressApp;
 
 	var logo = null;
-	if (meta.configs.hasOwnProperty('brand:emailLogo')) {
+	if (meta.config.hasOwnProperty('brand:emailLogo')) {
 		logo = (!meta.config['brand:emailLogo'].startsWith('http') ? nconf.get('url') : '') + meta.config['brand:emailLogo'];
 	}
 
@@ -194,15 +195,18 @@ Emailer.send = function (template, uid, params, callback) {
 				settings: async.apply(User.getSettings, uid),
 			}, next);
 		},
-		function (results, next) {
+		async function (results) {
 			if (!results.email) {
 				winston.warn('uid : ' + uid + ' has no email, not sending.');
-				return next();
+				return;
 			}
 			params.uid = uid;
-			Emailer.sendToEmail(template, results.email, results.settings.userLang, params, next);
+			params.rtl = await translator.translate('[[language:dir]]', results.settings.userLang) === 'rtl';
+			Emailer.sendToEmail(template, results.email, results.settings.userLang, params, function () {});
 		},
-	], callback);
+	], function (err) {
+		return callback(err);
+	});
 };
 
 Emailer.sendToEmail = function (template, email, language, params, callback) {
@@ -215,6 +219,31 @@ Emailer.sendToEmail = function (template, email, language, params, callback) {
 		'List-Id': '<' + [template, params.uid, getHostname()].join('.') + '>',
 		'List-Unsubscribe': '<' + [nconf.get('url'), 'uid', params.uid, 'settings'].join('/') + '>',
 	}, params.headers);
+
+	// Digests and notifications can be one-click unsubbed
+	let payload = {
+		template: template,
+		uid: params.uid,
+	};
+
+	switch (template) {
+	case 'digest':
+		payload = jwt.sign(payload, nconf.get('secret'), {
+			expiresIn: '30d',
+		});
+		params.headers['List-Unsubscribe'] = '<' + [nconf.get('url'), 'email', 'unsubscribe', payload].join('/') + '>';
+		params.headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+		break;
+
+	case 'notification':
+		payload.type = params.notification.type;
+		payload = jwt.sign(payload, nconf.get('secret'), {
+			expiresIn: '30d',
+		});
+		params.headers['List-Unsubscribe'] = '<' + [nconf.get('url'), 'email', 'unsubscribe', payload].join('/') + '>';
+		params.headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+		break;
+	}
 
 	async.waterfall([
 		function (next) {
@@ -256,6 +285,7 @@ Emailer.sendToEmail = function (template, email, language, params, callback) {
 				pid: params.pid,
 				fromUid: params.fromUid,
 				headers: params.headers,
+				rtl: params.rtl,
 			};
 			Plugins.fireHook('filter:email.modify', data, next);
 		},

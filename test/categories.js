@@ -284,24 +284,35 @@ describe('Categories', function () {
 		});
 
 		it('should ignore category', function (done) {
-			socketCategories.ignore({ uid: posterUid }, categoryObj.cid, function (err) {
+			socketCategories.ignore({ uid: posterUid }, { cid: categoryObj.cid }, function (err) {
 				assert.ifError(err);
 				Categories.isIgnored([categoryObj.cid], posterUid, function (err, isIgnored) {
 					assert.ifError(err);
 					assert.equal(isIgnored[0], true);
-					done();
+					Categories.getIgnorers(categoryObj.cid, 0, -1, function (err, ignorers) {
+						assert.ifError(err);
+						assert.deepEqual(ignorers, [posterUid]);
+						done();
+					});
 				});
 			});
 		});
 
 		it('should watch category', function (done) {
-			socketCategories.watch({ uid: posterUid }, categoryObj.cid, function (err) {
+			socketCategories.watch({ uid: posterUid }, { cid: categoryObj.cid }, function (err) {
 				assert.ifError(err);
 				Categories.isIgnored([categoryObj.cid], posterUid, function (err, isIgnored) {
 					assert.ifError(err);
 					assert.equal(isIgnored[0], false);
 					done();
 				});
+			});
+		});
+
+		it('should error if watch state does not exist', function (done) {
+			socketCategories.setWatchState({ uid: posterUid }, { cid: categoryObj.cid, state: 'invalid-state' }, function (err) {
+				assert.equal(err.message, '[[error:invalid-watch-state]]');
+				done();
 			});
 		});
 
@@ -732,6 +743,10 @@ describe('Categories', function () {
 					'upload:post:file': false,
 					signature: false,
 					'local:login': false,
+					'group:create': false,
+					'view:users': false,
+					'view:tags': false,
+					'view:groups': false,
 				});
 
 				done();
@@ -772,10 +787,14 @@ describe('Categories', function () {
 					'groups:search:content': true,
 					'groups:search:users': true,
 					'groups:search:tags': true,
+					'groups:view:users': true,
+					'groups:view:tags': true,
+					'groups:view:groups': true,
 					'groups:upload:post:image': true,
 					'groups:upload:post:file': false,
 					'groups:signature': true,
 					'groups:local:login': true,
+					'groups:group:create': false,
 				});
 
 				done();
@@ -787,6 +806,33 @@ describe('Categories', function () {
 				assert.ifError(err);
 				assert.equal(isAllowed, false);
 				done();
+			});
+		});
+
+		describe('Categories.getModeratorUids', function () {
+			before(function (done) {
+				async.series([
+					async.apply(groups.create, { name: 'testGroup' }),
+					async.apply(groups.join, 'cid:1:privileges:groups:moderate', 'testGroup'),
+					async.apply(groups.join, 'testGroup', 1),
+				], done);
+			});
+
+			it('should retrieve all users with moderator bit in category privilege', function (done) {
+				Categories.getModeratorUids([1, 2], function (err, uids) {
+					assert.ifError(err);
+					assert.strictEqual(2, uids.length);
+					assert.strictEqual(1, parseInt(uids[0], 10));
+					assert.strictEqual(0, uids[1].length);
+					done();
+				});
+			});
+
+			after(function (done) {
+				async.series([
+					async.apply(groups.leave, 'cid:1:privileges:groups:moderate', 'testGroup'),
+					async.apply(groups.destroy, 'testGroup'),
+				], done);
 			});
 		});
 	});
