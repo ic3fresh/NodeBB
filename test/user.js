@@ -899,7 +899,7 @@ describe('User', function () {
 		it('should return error if profile image uploads disabled', function (done) {
 			meta.config.allowProfileImageUploads = 0;
 			var picture = {
-				path: path.join(nconf.get('base_dir'), 'test/files/test.png'),
+				path: path.join(nconf.get('base_dir'), 'test/files/test_copy.png'),
 				size: 7189,
 				name: 'test.png',
 				type: 'image/png',
@@ -916,7 +916,7 @@ describe('User', function () {
 		it('should return error if profile image is too big', function (done) {
 			meta.config.allowProfileImageUploads = 1;
 			var picture = {
-				path: path.join(nconf.get('base_dir'), 'test/files/test.png'),
+				path: path.join(nconf.get('base_dir'), 'test/files/test_copy.png'),
 				size: 265000,
 				name: 'test.png',
 				type: 'image/png',
@@ -933,7 +933,7 @@ describe('User', function () {
 
 		it('should return error if profile image has no mime type', function (done) {
 			var picture = {
-				path: path.join(nconf.get('base_dir'), 'test/files/test.png'),
+				path: path.join(nconf.get('base_dir'), 'test/files/test_copy.png'),
 				size: 7189,
 				name: 'test',
 			};
@@ -1588,13 +1588,11 @@ describe('User', function () {
 	});
 
 	describe('approval queue', function () {
-		var socketAdmin = require('../src/socket.io/admin');
-
-		var oldRegistrationType;
+		var oldRegistrationApprovalType;
 		var adminUid;
 		before(function (done) {
-			oldRegistrationType = meta.config.registrationType;
-			meta.config.registrationType = 'admin-approval';
+			oldRegistrationApprovalType = meta.config.registrationApprovalType;
+			meta.config.registrationApprovalType = 'admin-approval';
 			User.create({ username: 'admin', password: '123456' }, function (err, uid) {
 				assert.ifError(err);
 				adminUid = uid;
@@ -1603,7 +1601,7 @@ describe('User', function () {
 		});
 
 		after(function (done) {
-			meta.config.registrationType = oldRegistrationType;
+			meta.config.registrationApprovalType = oldRegistrationApprovalType;
 			done();
 		});
 
@@ -1893,10 +1891,8 @@ describe('User', function () {
 
 	describe('user jobs', function () {
 		it('should start user jobs', function (done) {
-			User.startJobs(function (err) {
-				assert.ifError(err);
-				done();
-			});
+			User.startJobs();
+			done();
 		});
 
 		it('should stop user jobs', function (done) {

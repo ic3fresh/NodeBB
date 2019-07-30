@@ -199,7 +199,7 @@ define('forum/topic/posts', [
 				components.get('topic').append(html);
 			}
 
-			infinitescroll.removeExtra($('[component="post"]'), direction, config.postsPerPage * 2);
+			infinitescroll.removeExtra($('[component="post"]'), direction, Math.max(20, config.postsPerPage * 2));
 
 			$(window).trigger('action:posts.loaded', { posts: data.posts });
 
@@ -250,12 +250,57 @@ define('forum/topic/posts', [
 	};
 
 	Posts.onTopicPageLoad = function (posts) {
+		handlePrivateUploads(posts);
 		images.wrapImagesInLinks(posts);
 		Posts.showBottomPostBar();
 		posts.find('[component="post/content"] img:not(.not-responsive)').addClass('img-responsive');
 		Posts.addBlockquoteEllipses(posts);
 		hidePostToolsForDeletedPosts(posts);
+		addNecroPostMessage();
 	};
+
+	function addNecroPostMessage() {
+		var necroThreshold = 7 * 24 * 60 * 60 * 1000;
+		$('[component="post"]').each(function () {
+			var post = $(this);
+			var prev = post.prev('[component="post"]');
+			if (post.is(':has(.necro-post)') || !prev.length) {
+				return;
+			}
+
+			var diff = post.attr('data-timestamp') - prev.attr('data-timestamp');
+			if (diff >= necroThreshold) {
+				var ago = $.timeago.settings.strings.suffixAgo;
+				$.timeago.settings.strings.suffixAgo = '';
+				var translationText = '[[topic:timeago_later,' + $.timeago.inWords(diff) + ']]';
+				$.timeago.settings.strings.suffixAgo = ago;
+				app.parseAndTranslate('partials/topic/necro-post', { text: translationText }, function (html) {
+					html.prependTo(post);
+				});
+			}
+		});
+	}
+
+	function handlePrivateUploads(posts) {
+		if (app.user.uid) {
+			return;
+		}
+
+		// Replace all requests for uploaded images/files with a login link
+		var loginEl = document.createElement('a');
+		loginEl.className = 'login-required';
+		loginEl.href = config.relative_path + '/login';
+		loginEl.appendChild(document.createTextNode('🔒 Log in to view'));
+
+		posts.each(function (idx, postEl) {
+			$(postEl).find('[component="post/content"] img').each(function (idx, imgEl) {
+				imgEl = $(imgEl);
+				if (imgEl.attr('src').startsWith(config.relative_path + config.upload_url)) {
+					imgEl.replaceWith(loginEl.cloneNode(true));
+				}
+			});
+		});
+	}
 
 	Posts.onNewPostsAddedToDom = function (posts) {
 		Posts.onTopicPageLoad(posts);

@@ -8,7 +8,7 @@
 	"custom-js.enable": "Enable Custom Javascript",
 
 	"custom-header": "Cabeçalho Personalizado",
-	"custom-header.description": "Insira HTML personalizado aqui ( Meta Tags, etc.) para que seja adicionado ao <code>&lt;head&gt;</code> do seu fórum. Tags de script são permitidas, porém são desaconselhadas uma vez que a tab de Javascript Personalizado está disponível.",
+	"custom-header.description": "Adicione aqui HTML personalizado (ex. Meta Tags, etc.), os quais serão adicionados à seção de  <code>&lt;cabeçalho&gt;</code> do código do teu fórum. Tags de script são permitidas, mas são desencorajadas, já que a tab <a href=\"#custom-js\" data-toggle=\"tab\">Javascript Personalizado</a> está disponível.",
 	"custom-header.enable": "Habilitar Cabeçalho Personalizado",
 
 	"custom-css.livereload": "Ativar Recarregamento Automático",

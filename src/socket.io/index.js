@@ -146,7 +146,18 @@ function onMessage(socket, payload) {
 			}
 		},
 		function (next) {
-			methodToCall(socket, params, next);
+			let callbackCalled = false;
+			function nextOnce(err, res) {
+				if (callbackCalled) { return; }
+				callbackCalled = true;
+				next(err, res);
+			}
+			const returned = methodToCall(socket, params, nextOnce);
+			if (returned && typeof returned.then === 'function') {
+				returned.then((payload) => {
+					nextOnce(null, payload);
+				}, next);
+			}
 		},
 	], function (err, result) {
 		callback(err ? { message: err.message } : null, result);

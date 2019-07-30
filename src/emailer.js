@@ -37,7 +37,7 @@ var app;
 
 var viewsDir = nconf.get('views_dir');
 
-Emailer.getTemplates = function (config, cb) {
+Emailer.getTemplates = function (config, callback) {
 	var emailsPath = path.join(viewsDir, 'emails');
 	async.waterfall([
 		function (next) {
@@ -71,7 +71,7 @@ Emailer.getTemplates = function (config, cb) {
 				], next);
 			}, next);
 		},
-	], cb);
+	], callback);
 };
 
 Emailer.listServices = function (callback) {
@@ -199,18 +199,23 @@ Emailer.send = function (template, uid, params, callback) {
 	async.waterfall([
 		function (next) {
 			async.parallel({
-				email: async.apply(User.getUserField, uid, 'email'),
+				userData: async.apply(User.getUserFields, uid, ['email', 'username']),
 				settings: async.apply(User.getSettings, uid),
 			}, next);
 		},
 		async function (results) {
-			if (!results.email) {
+			if (!results.userData || !results.userData.email) {
 				winston.warn('uid : ' + uid + ' has no email, not sending.');
 				return;
 			}
 			params.uid = uid;
+			params.username = results.userData.username;
 			params.rtl = await translator.translate('[[language:dir]]', results.settings.userLang) === 'rtl';
-			Emailer.sendToEmail(template, results.email, results.settings.userLang, params, function () {});
+			Emailer.sendToEmail(template, results.userData.email, results.settings.userLang, params, function (err) {
+				if (err) {
+					winston.error(err);
+				}
+			});
 		},
 	], function (err) {
 		return callback(err);
@@ -402,3 +407,5 @@ function getHostname() {
 
 	return parsed.hostname;
 }
+
+require('./promisify')(Emailer, ['transports']);

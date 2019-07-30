@@ -71,7 +71,7 @@
     "title-too-long": "Por favor digite um título menor. Títulos não podem ser maiores que %1 caractere(s).",
     "category-not-selected": "Categoria não escolhida.",
     "too-many-posts": "Você pode postar uma vez a cada %1 segundo(s) - por favor aguarde antes de postar novamente",
-    "too-many-posts-newbie": "Como novo usuário, você pode postar uma vez a cada %1 segundo(s) até que você tenha recebido reputação de %2 - por favor aguarde antes de postar novamente",
+    "too-many-posts-newbie": "Como novo usuário, você só pode postar uma vez a cada %1 segundo(s) até que você tenha, pelo menos, %2 de reputação. Por favor, aguarde antes de postar novamente.",
     "tag-too-short": "Por favor digite uma tag maior. Tags devem conter pelo menos %1 caractere(s)",
     "tag-too-long": "Por favor digite uma tag menor. Tags não podem conter mais que %1 caractere(s)",
     "not-enough-tags": "Sem tags suficientes. Tópicos devem ter no mínimo %1 tag(s)",
@@ -144,7 +144,6 @@
     "invite-maximum-met": "Você já convidou o número máximo de pessoas (%1 de %2).",
     "no-session-found": "Nenhuma sessão de login encontrada!",
     "not-in-room": "O usuário não está na sala",
-    "no-users-in-room": "Nenhum usuário nesta sala",
     "cant-kick-self": "Você não pode kickar a si mesmo do grupo",
     "no-users-selected": "Nenhuma escolha de usuário(s) foi feita",
     "invalid-home-page-route": "Rota de página inicial inválida",
@@ -157,5 +156,5 @@
     "cannot-block-guest": "Vistantes não podem bloquear outros usuários",
     "already-blocked": "Este usuário já foi bloqueado",
     "already-unblocked": "Este usuário já foi desbloqueado",
-    "no-connection": "Parece haver um problema com sua conexão com a internet"
+    "no-connection": "Parece haver um problema com a sua conexão com a internet"
 }
